@@ -1,39 +1,44 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background-color: #ffffff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-family: sans-serif;
-}
-
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
+/* واجهة بيضاء وكل شيء في الوسط */
+body, html {
+  margin: 0; padding: 0;
   height: 100%;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  direction: rtl;
+  flex-direction: column;
 }
 
 #recordBtn {
   width: 120px;
   height: 120px;
-  background-color: #e53935;
-  border: none;
+  background: red;
   border-radius: 50%;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: none;
+  outline: none;
   cursor: pointer;
+  box-shadow: 0 0 15px rgba(255,0,0,0.7);
+  transition: box-shadow 0.3s ease;
+  font-size: 18px;
+  color: white;
+  user-select: none;
 }
 
 #recordBtn:active {
-  background-color: #c62828;
+  box-shadow: 0 0 30px rgba(255,0,0,1);
 }
+
+#status {
+  margin-top: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  min-height: 1.2em;
+  user-select: none;
+}
+
 h1 {
     position: absolute;
     top: 21%;
