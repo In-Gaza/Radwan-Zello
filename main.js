@@ -1,59 +1,60 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect,
+  push
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import {
+  getAuth,
+  signInAnonymously
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// إعدادات Firebase الخاصة بك
+// إعدادات Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDO5c6tKCzondWfKYiyqYqh4-pIuOjCNVY",
   authDomain: "family-zello.firebaseapp.com",
   databaseURL: "https://family-zello-default-rtdb.firebaseio.com",
   projectId: "family-zello",
-  storageBucket: "family-zello.firebasestorage.app",
+  storageBucket: "family-zello.appspot.com",
   messagingSenderId: "904926022752",
   appId: "1:904926022752:web:11bcdef3f51643a3e70705"
 };
 
-// تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
-// تسجيل الدخول المجهول
-signInAnonymously(auth).catch(e => {
-  console.error("فشل تسجيل الدخول:", e.message);
-});
+signInAnonymously(auth);
 
-// حساب عدد المتصلين
-const onlineCountSpan = document.getElementById("onlineCount");
-
-// معرف فريد مؤقت للمستخدم (يمكن تحسينه لاحقًا)
 const userId = Math.random().toString(36).substring(2, 10);
 const userRef = ref(db, "onlineUsers/" + userId);
-
-// سجل وجود المستخدم
 set(userRef, true);
 onDisconnect(userRef).remove();
 
-// حدث تحديث عدد المتصلين
+const onlineCountSpan = document.getElementById("onlineCount");
 const onlineUsersRef = ref(db, "onlineUsers");
+
 onValue(onlineUsersRef, snapshot => {
   const count = snapshot.size || snapshot.numChildren();
   onlineCountSpan.textContent = `المتصلون الآن: ${count}`;
 });
 
-// ----------------------------
-// تسجيل الصوت مع ضغط طويل
-// ----------------------------
 const recordBtn = document.getElementById("recordBtn");
 
 let mediaRecorder = null;
 let audioChunks = [];
 
 async function startRecording() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("متصفحك لا يدعم تسجيل الصوت");
-    return;
-  }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
@@ -62,11 +63,21 @@ async function startRecording() {
       audioChunks.push(e.data);
     };
 
-    mediaRecorder.onstop = e => {
+    mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
       audioChunks = [];
-      playAudio(audioBlob);
-      // هنا يمكنك إضافة رفع الصوت إلى Firebase Storage لاحقًا
+
+      const filename = `voice_${Date.now()}.webm`;
+      const audioRef = storageRef(storage, `voices/${filename}`);
+
+      await uploadBytes(audioRef, audioBlob);
+      const downloadURL = await getDownloadURL(audioRef);
+
+      const voiceRef = push(ref(db, "voices"));
+      set(voiceRef, {
+        url: downloadURL,
+        time: Date.now()
+      });
     };
 
     mediaRecorder.start();
@@ -84,33 +95,32 @@ function stopRecording() {
   }
 }
 
-function playAudio(blob) {
-  const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
-  audio.play();
-}
-
-// التحكم بزر الضغط الطويل
-let pressTimer = null;
-
-recordBtn.addEventListener("mousedown", () => {
-  startRecording();
-});
-
-recordBtn.addEventListener("mouseup", () => {
-  stopRecording();
-});
-
-recordBtn.addEventListener("mouseleave", () => {
-  stopRecording();
-});
-
+recordBtn.addEventListener("mousedown", () => startRecording());
+recordBtn.addEventListener("mouseup", () => stopRecording());
+recordBtn.addEventListener("mouseleave", () => stopRecording());
 recordBtn.addEventListener("touchstart", e => {
   e.preventDefault();
   startRecording();
 });
-
 recordBtn.addEventListener("touchend", e => {
   e.preventDefault();
   stopRecording();
+});
+
+// تشغيل الصوت الجديد تلقائيًا
+const voicesRef = ref(db, "voices");
+let lastPlayed = 0;
+
+onValue(voicesRef, snapshot => {
+  const voices = snapshot.val();
+  if (!voices) return;
+
+  const sorted = Object.values(voices).sort((a, b) => a.time - b.time);
+  const latest = sorted[sorted.length - 1];
+
+  if (latest.time > lastPlayed) {
+    lastPlayed = latest.time;
+    const audio = new Audio(latest.url);
+    audio.play();
+  }
 });
