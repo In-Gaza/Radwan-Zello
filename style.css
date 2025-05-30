@@ -1,20 +1,18 @@
-/* صفحة بيضاء بالكامل */
 body,
 html {
     margin: 0;
     padding: 0;
     height: 100%;
-    background-color: white;
+    background: white;
     font-family: Arial, sans-serif;
-    direction: rtl;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
 }
 
 .container {
-    text-align: center;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #recordBtn {
@@ -24,19 +22,16 @@ html {
     border: none;
     background-color: red;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-    transition: background-color 0.3s ease;
+    outline: none;
+    transition: background-color 0.3s;
 }
 
 #recordBtn:active {
     background-color: darkred;
-    box-shadow: 0 0 20px rgba(139, 0, 0, 0.9);
 }
 
 #status {
-    margin-top: 15px;
+    margin-top: 20px;
     font-size: 18px;
     color: #333;
-    user-select: none;
 }
-
