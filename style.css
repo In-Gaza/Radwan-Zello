@@ -34,5 +34,8 @@ body {
 #recordBtn:active {
   background-color: #c62828;
 }
-
+h1 {
+    position: absolute;
+    top: 21%;
+}
 
