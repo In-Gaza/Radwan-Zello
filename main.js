@@ -1,60 +1,74 @@
-// === Firebase config ===
+// استيراد Firebase
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, push, onChildAdded } from "firebase/database";
+
+// إعدادات Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAxoC6esP0bRsZ5i5--RBTpPeTTVOhoD1Y",
+  authDomain: "radwan-zello.firebaseapp.com",
+  databaseURL: "https://radwan-zello-default-rtdb.firebaseio.com",
+  projectId: "radwan-zello",
+  storageBucket: "radwan-zello.firebasestorage.app",
+  messagingSenderId: "610135917058",
+  appId: "1:610135917058:web:593bcd470bf91d80269d1b"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// تهيئة Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const messagesRef = ref(db, "messages");
 
+// عناصر HTML
 const recordBtn = document.getElementById("recordBtn");
-const messagesDiv = document.getElementById("messages");
 
+// متغيرات التسجيل
 let mediaRecorder;
-let chunks = [];
+let audioChunks = [];
 
-navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+// بدء التسجيل عند الضغط
+recordBtn.addEventListener("mousedown", async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   mediaRecorder = new MediaRecorder(stream);
 
-  mediaRecorder.ondataavailable = e => chunks.push(e.data);
+  mediaRecorder.ondataavailable = e => {
+    audioChunks.push(e.data);
+  };
 
   mediaRecorder.onstop = async () => {
-    const blob = new Blob(chunks, { type: 'audio/webm' });
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    audioChunks = [];
+
+    // تحويل إلى Base64
     const reader = new FileReader();
-
     reader.onloadend = () => {
-      const base64 = reader.result;
-      const time = Date.now();
-      db.ref("messages/" + time).set({ audio: base64 });
-      chunks = [];
+      const base64Audio = reader.result;
+
+      // إرسال إلى قاعدة البيانات
+      push(messagesRef, {
+        audio: base64Audio,
+        timestamp: Date.now()
+      });
     };
-
-    reader.readAsDataURL(blob);
+    reader.readAsDataURL(audioBlob);
   };
-});
 
-recordBtn.addEventListener("mousedown", () => {
-  chunks = [];
   mediaRecorder.start();
+  console.log("بدأ التسجيل...");
 });
 
+// إيقاف التسجيل عند رفع الضغط
 recordBtn.addEventListener("mouseup", () => {
-  mediaRecorder.stop();
-});
-
-// الاستماع للرسائل الجديدة
-db.ref("messages").on("child_added", snapshot => {
-  const data = snapshot.val();
-  if (data.audio) {
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.src = data.audio;
-    messagesDiv.prepend(audio);
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+    console.log("توقف التسجيل");
   }
 });
 
+// تشغيل الأصوات عند وصولها من الآخرين
+onChildAdded(messagesRef, snapshot => {
+  const message = snapshot.val();
+  if (message.audio) {
+    const audio = new Audio(message.audio);
+    audio.play();
+  }
+});
