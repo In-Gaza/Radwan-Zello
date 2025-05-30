@@ -1,12 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-    getDatabase,
-    ref,
-    push,
-    onChildAdded
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+// استيراد Firebase من SDK
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-database.js";
 
-// إعدادات Firebase
+// إعدادات Firebase (ضع بيانات مشروعك هنا)
 const firebaseConfig = {
     apiKey: "AIzaSyAxoC6esP0bRsZ5i5--RBTpPeTTVOhoD1Y",
     authDomain: "radwan-zello.firebaseapp.com",
@@ -24,71 +20,83 @@ const messagesRef = ref(db, "messages");
 
 // عناصر HTML
 const recordBtn = document.getElementById("recordBtn");
-const status = document.getElementById("status");
+const statusText = document.getElementById("status");
 
 // متغيرات التسجيل
 let mediaRecorder;
 let audioChunks = [];
-let audioStream = null;
 
-// بدء التسجيل
-async function startRecording() {
+// تحقق من صلاحية الميكروفون (يطلبها مرة واحدة فقط)
+async function checkMicrophonePermission() {
     try {
-        if (!audioStream) {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        }
-        mediaRecorder = new MediaRecorder(audioStream);
-        audioChunks = [];
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+    } catch (error) {
+        alert("يرجى السماح باستخدام الميكروفون لتتمكن من التسجيل.");
+        return false;
+    }
+}
+
+// بدء التسجيل عند الضغط مطولاً
+recordBtn.addEventListener("mousedown", async () => {
+    const allowed = await checkMicrophonePermission();
+    if (!allowed) return;
+
+    audioChunks = [];
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.ondataavailable = e => {
             audioChunks.push(e.data);
         };
 
         mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-            const reader = new FileReader();
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            audioChunks = [];
 
+            // تحويل إلى Base64
+            const reader = new FileReader();
             reader.onloadend = () => {
                 const base64Audio = reader.result;
+
+                // إرسال البيانات إلى Firebase
                 push(messagesRef, {
                     audio: base64Audio,
                     timestamp: Date.now()
                 });
             };
-
             reader.readAsDataURL(audioBlob);
-            status.textContent = "تم إرسال التسجيل";
+
+            statusText.textContent = "تم إرسال التسجيل.";
         };
 
         mediaRecorder.start();
-        status.textContent = "التسجيل جاري... 🎤";
-    } catch (error) {
-        console.error("خطأ في الوصول للميكروفون:", error);
-        status.textContent = "لم يتم منح إذن الميكروفون!";
+        statusText.textContent = "التسجيل جارٍ... حرر الزر للإيقاف.";
+    } catch (err) {
+        statusText.textContent = "حدث خطأ في تسجيل الصوت.";
+        console.error(err);
     }
-}
+});
 
-// إيقاف التسجيل
-function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+// إيقاف التسجيل عند رفع الضغط
+recordBtn.addEventListener("mouseup", () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
+        statusText.textContent = "جاري الإرسال...";
     }
-}
-
-// دعم أحداث الماوس واللمس
-recordBtn.addEventListener("mousedown", startRecording);
-recordBtn.addEventListener("touchstart", (e) => {
-    e.preventDefault(); // منع تمرير الصفحة على الجوال أثناء اللمس
-    startRecording();
 });
 
-recordBtn.addEventListener("mouseup", stopRecording);
-recordBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    stopRecording();
+// دعم إيقاف التسجيل لو حدث رفع الضغط خارج الزر
+recordBtn.addEventListener("mouseleave", () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        statusText.textContent = "جاري الإرسال...";
+    }
 });
 
-// تشغيل الرسائل الصوتية الواردة من الآخرين
+// تشغيل الأصوات المستقبلة من الآخرين
 onChildAdded(messagesRef, snapshot => {
     const message = snapshot.val();
     if (message.audio) {
