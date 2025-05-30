@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>زوو - دردشة صوتية عائلية</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zello العائلة</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <h1>🎤 دردشة عائلية صوتية</h1>
+  <button id="recordBtn">اضغط مع الاستمرار للتسجيل</button>
+  <div id="messages"></div>
 
-  <div id="onlineCount">المتصلون الآن: 0</div>
-  <div id="recordBtn" title="اضغط مع الاستمرار للتحدث">اضغط وتكلم</div>
-
-  <script type="module" src="main.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
