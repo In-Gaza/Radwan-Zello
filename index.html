@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Radwan Zello</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Radwan Zello</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-  <button id="recordBtn" aria-label="زر تسجيل الصوت">• اضغط مع الاستمرار للتحدث</button>
-  <div id="status"></div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <body>
+        <div class="container">
+            <button id="recordBtn" aria-label="زر تسجيل الصوت"></button>
+            <p id="status">اضغط مع الاستمرار للتسجيل</p>
+        </div>
 
-  <script src="main.js"></script>
-</body>
+
+        <!-- Firebase SDKs -->
+        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+        <script src="main.js"></script>
+    </body>
+
 </html>
