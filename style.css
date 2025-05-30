@@ -1,23 +1,31 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  text-align: center;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   font-family: sans-serif;
-  padding: 20px;
-  background: #f4f4f4;
 }
 
-#recordBtn {
-  padding: 15px 30px;
-  font-size: 18px;
-  background: #2196f3;
-  color: white;
+button {
+  padding: 20px 40px;
+  font-size: 20px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
+  background-color: #e53935; /* أحمر */
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
 }
 
-#messages {
-  margin-top: 30px;
+button:active {
+  background-color: #c62828; /* أحمر غامق عند الضغط */
 }
 
-audio {
-  margin: 10px 0;
-}
